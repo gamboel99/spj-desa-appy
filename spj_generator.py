@@ -8,7 +8,7 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_da
     template_bytes = pkgutil.get_data(__name__, "templates/template_spj (valid).docx")
     
     if not template_bytes:
-        raise FileNotFoundError("template_spj.docx tidak ditemukan")
+        raise FileNotFoundError("template_spj (valid).docx tidak ditemukan")
 
     # Load dokumen dari bytes
     doc = Document(io.BytesIO(template_bytes))
