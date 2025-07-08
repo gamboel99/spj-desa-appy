@@ -5,7 +5,7 @@ import io
 
 def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload):
     # Baca file template dari folder templates/ sebagai binary
-    template_bytes = pkgutil.get_data(__name__, "templates/template_spj.docx")
+    template_bytes = pkgutil.get_data(__name__, "templates/template_spj (valid).docx")
     
     if not template_bytes:
         raise FileNotFoundError("template_spj.docx tidak ditemukan")
