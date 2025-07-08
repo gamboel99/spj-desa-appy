@@ -18,8 +18,15 @@ with st.form("form_kegiatan"):
     nama_kegiatan = st.text_input("Nama Kegiatan")
     tgl_pelaksanaan = st.date_input("Tanggal Pelaksanaan", date.today())
     lokasi = st.text_input("Lokasi")
-    anggaran = st.number_input("Anggaran (Rp)", 0)
+    kode_register = st.text_input("Kode Register SPJ", value="470/SPJ-DESA")
+
+    st.markdown("### 💰 Data RAB dan Realisasi")
+    rab_awal = st.number_input("Total RAB (Rp)", 0)
     realisasi = st.number_input("Realisasi (Rp)", 0)
+    selisih = rab_awal - realisasi
+    status = "✅ Sesuai" if selisih == 0 else ("🔺 Lebih" if selisih < 0 else "🔻 Kurang")
+    st.markdown(f"**Selisih:** Rp {selisih:,.0f} ({status})")
+
     sumber_dana = st.selectbox("Sumber Dana", ["DD", "ADD", "BKK", "Swadaya", "Lainnya"])
 
     st.subheader("📎 Upload & Identitas Pejabat")
@@ -38,8 +45,9 @@ if submit:
         try:
             file_path = buat_spj(
                 lembaga, nama_kegiatan, tgl_pelaksanaan, lokasi,
-                anggaran, realisasi, sumber_dana, bukti_upload,
-                nama_kades, nama_ketua_bpd, nama_ketua_lembaga, nama_bendahara
+                rab_awal, realisasi, sumber_dana, bukti_upload,
+                nama_kades, nama_ketua_bpd, nama_ketua_lembaga, nama_bendahara,
+                kode_register
             )
             st.success("✅ SPJ berhasil dibuat!")
             with open(file_path, "rb") as f:
