@@ -8,13 +8,15 @@ from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime
 
-def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload):
+def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload,
+             nama_kades="Sutrisno, S.E.", nama_ketua_bpd="Misdi", nama_ketua_lembaga="", nama_bendahara=""):
+
     doc = Document()
 
     # Tambahkan logo desa jika tersedia
     logo_path = os.path.join(os.path.dirname(__file__), "logo_desa.png")
     if os.path.exists(logo_path):
-        doc.add_picture(logo_path, width=Inches(1.0))
+        doc.add_picture(logo_path, width=Inches(1.2))
 
     # KOP DESA
     header = doc.add_paragraph()
@@ -63,14 +65,8 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_da
     table.cell(0, 1).text = f"Lembaga Pelaksana\nKetua {lembaga}"
 
     # Baris 2
-    table.cell(1, 0).text = "Sutrisno, S.E."
-    table.cell(1, 1).text = {
-        "TPK": "Budi Santoso",
-        "PPKAD": "Sri Wahyuni",
-        "PPS": "Luluk Maulida",
-        "Karang Taruna": "Heri Setiawan",
-        "LPMD": "Sukardi"
-    }.get(lembaga, "Nama Ketua")
+    table.cell(1, 0).text = nama_kades
+    table.cell(1, 1).text = nama_ketua_lembaga if nama_ketua_lembaga else ".................."
 
     # Baris 3
     table.cell(2, 0).text = ""
@@ -78,19 +74,13 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_da
 
     # Baris 4
     table.cell(3, 0).text = ""
-    table.cell(3, 1).text = {
-        "TPK": "Rina Puspitasari",
-        "PPKAD": "Dwi Lestari",
-        "PPS": "Yuli Andriani",
-        "Karang Taruna": "Riski Amalia",
-        "LPMD": "Dian Sari"
-    }.get(lembaga, "Nama Bendahara")
+    table.cell(3, 1).text = nama_bendahara if nama_bendahara else ".................."
 
     doc.add_paragraph("\n")
 
     # TANDA TANGAN KETUA BPD
     bpd_paragraf = doc.add_paragraph()
-    bpd_paragraf.add_run("Mengesahkan,\nKetua BPD\n\n\nMisdi")
+    bpd_paragraf.add_run("Mengesahkan,\nKetua BPD\n\n\n" + nama_ketua_bpd)
     bpd_paragraf.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
     # Simpan dokumen
