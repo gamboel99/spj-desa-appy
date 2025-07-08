@@ -21,8 +21,8 @@ with st.form("form_kegiatan"):
 if submit:
     with st.spinner("📄 Membuat dokumen SPJ..."):
         try:
-            file_path = buat_spj(lembaga, nama_kegiatan, tgl_pelaksanaan, lokasi,
-                                 anggaran, realisasi, sumber_dana, bukti_upload)
+            with open(file_path, "rb") as f:
+                 st.download_button("📥 Unduh SPJ (PDF)", data=f.read(), file_name="SPJ_Kegiatan.pdf")
             st.success("✅ SPJ berhasil dibuat!")
             with open(file_path, "rb") as f:
                 st.download_button("📥 Unduh SPJ (DOCX)", data=f.read(), file_name="SPJ_Kegiatan.docx")
