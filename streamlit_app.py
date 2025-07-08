@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-from spj_generator import buat_spj
+from spj_generator import buat_spj, generate_register_code
 
 st.set_page_config(page_title="Sistem SPJ Desa Keling", layout="wide")
 st.title("📝 Sistem SPJ Desa Keling, Kec. Kepung")
@@ -15,7 +15,9 @@ with st.form("form_kegiatan"):
     tgl_pelaksanaan = st.date_input("Tanggal Pelaksanaan", date.today())
     lokasi = st.text_input("Lokasi")
     sumber_dana = st.selectbox("Sumber Dana", ["DD", "ADD", "BKK", "Swadaya", "Lainnya"])
-    kode_register = st.text_input("Kode Register SPJ (Contoh: 2025-07-08-001)")
+
+    kode_register = generate_register_code()
+    st.info(f"📑 Kode Register Otomatis: {kode_register}")
 
     st.markdown("### 🧾 RAB dan Realisasi")
     rab_df = st.data_editor(pd.DataFrame({
@@ -52,7 +54,6 @@ if submit:
         except Exception as e:
             st.error(f"❌ Terjadi kesalahan: {e}")
 
-# Footer
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; font-size: 13px; color: gray;'>"
