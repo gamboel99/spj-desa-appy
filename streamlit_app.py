@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import date
 from spj_generator import buat_spj
+import os
+st.write("Path:", os.path.exists(os.path.join(os.path.dirname(__file__), "templates", "template_spj.docx")))
 
 st.set_page_config(page_title="SPJ Desa", layout="wide")
 st.title("📄 Sistem Penerbitan Surat Pertanggungjawaban (SPJ) Desa")
