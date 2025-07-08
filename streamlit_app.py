@@ -20,9 +20,11 @@ with st.form("form_kegiatan"):
     submit = st.form_submit_button("✅ Buat Surat Pertanggungjawaban")
 
 if submit:
-    with st.spinner(doc = Document("template_spj.docx")
-):
-        file_path = buat_spj(lembaga, nama_kegiatan, tgl_pelaksanaan, lokasi,
-                             anggaran, realisasi, sumber_dana, bukti_upload)
-        st.success("✅ SPJ berhasil dibuat!")
-        st.download_button("📥 Unduh SPJ (PDF)", data=open(file_path, "rb").read(), file_name="SPJ_Kegiatan.pdf")
+    with st.spinner("📄 Membuat dokumen SPJ..."):
+        try:
+            file_path = buat_spj(lembaga, nama_kegiatan, tgl_pelaksanaan, lokasi,
+                                 anggaran, realisasi, sumber_dana, bukti_upload)
+            st.success("✅ SPJ berhasil dibuat!")
+            st.download_button("📥 Unduh SPJ (PDF)", data=open(file_path, "rb").read(), file_name="SPJ_Kegiatan.pdf")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat membuat dokumen SPJ: {e}")
