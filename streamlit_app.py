@@ -20,7 +20,8 @@ with st.form("form_kegiatan"):
     submit = st.form_submit_button("✅ Buat Surat Pertanggungjawaban")
 
 if submit:
-    with st.spinner("Membuat dokumen SPJ..."):
+    with st.spinner(doc = Document("template_spj.docx")
+):
         file_path = buat_spj(lembaga, nama_kegiatan, tgl_pelaksanaan, lokasi,
                              anggaran, realisasi, sumber_dana, bukti_upload)
         st.success("✅ SPJ berhasil dibuat!")
