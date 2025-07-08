@@ -1,16 +1,18 @@
 import os
+import qrcode
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime
+from docx.oxml.ns import qn
 
 def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df, bukti_upload,
              nama_kades, nama_ketua_bpd, nama_ketua_lembaga, nama_bendahara, kode_register):
 
     doc = Document()
 
-    # Logo (jika ada)
+    # Tambah logo desa
     logo_path = os.path.join(os.path.dirname(__file__), "logo_desa.png")
     if os.path.exists(logo_path):
         doc.add_picture(logo_path, width=Inches(1.2))
@@ -25,12 +27,12 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df, bukti_upl
 
     doc.add_paragraph(f"\nNomor: {kode_register}/{tgl.month:02d}/{tgl.year}\n", style="Normal")
 
-    # Judul SPJ
+    # Judul
     judul = doc.add_paragraph("SURAT PERTANGGUNGJAWABAN KEGIATAN")
     judul.alignment = WD_ALIGN_PARAGRAPH.CENTER
     judul.runs[0].bold = True
 
-    # Informasi kegiatan
+    # Info kegiatan
     doc.add_paragraph(f"\nNama Kegiatan        : {nama_kegiatan}")
     doc.add_paragraph(f"Tanggal Pelaksanaan  : {tgl.strftime('%d-%m-%Y')}")
     doc.add_paragraph(f"Lembaga Pelaksana    : {lembaga}")
@@ -78,37 +80,49 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df, bukti_upl
     doc.add_paragraph(f"Total Realisasi: Rp {total_realisasi:,.0f}")
     doc.add_paragraph(f"Selisih        : Rp {total_anggaran - total_realisasi:,.0f}")
 
-    # Paragraf TTD Atas
-    doc.add_paragraph(f"\nDesa Keling, {tgl.strftime('%d-%m-%Y')}\n")
+    # QR Code
+    qr_text = f"SPJ Desa Keling\nKegiatan: {nama_kegiatan}\nTanggal: {tgl.strftime('%d-%m-%Y')}\nLembaga: {lembaga}\nKode: {kode_register}"
+    qr_img = qrcode.make(qr_text)
+    qr_path = os.path.join(os.path.dirname(__file__), "qr_temp.png")
+    qr_img.save(qr_path)
 
-    # Tanda tangan rapi tanpa border menggunakan table invisible
+    doc.add_paragraph(f"\nDesa Keling, {tgl.strftime('%d-%m-%Y')}")
+
+    # Tabel tanda tangan tanpa border
     ttd_table = doc.add_table(rows=4, cols=2)
     ttd_table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-    # Hapus border tabel
-    tbl = ttd_table._tbl
-    for row in tbl.xpath(".//w:tr"):
-        for cell in row.xpath(".//w:tc"):
-            tcPr = cell.find(".//w:tcPr", namespaces=cell.nsmap)
-            if tcPr is None:
-                tcPr = cell.makeelement("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tcPr")
-                cell.insert(0, tcPr)
-            tcBorders = cell.makeelement("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tcBorders")
-            tcPr.append(tcBorders)
+    # Kosongkan border
+    for row in ttd_table.rows:
+        for cell in row.cells:
+            tc = cell._tc
+            tcPr = tc.get_or_add_tcPr()
+            tcBorders = tcPr.xpath("./w:tcBorders")
+            for border in tcBorders:
+                tcPr.remove(border)
 
     ttd_table.cell(0, 0).text = "Mengetahui:\nKepala Desa"
     ttd_table.cell(0, 1).text = f"Lembaga Pelaksana\nKetua {lembaga}"
-    ttd_table.cell(1, 0).text = nama_kades
-    ttd_table.cell(1, 1).text = nama_ketua_lembaga
-    ttd_table.cell(2, 0).text = ""
-    ttd_table.cell(2, 1).text = "Bendahara"
-    ttd_table.cell(3, 0).text = ""
-    ttd_table.cell(3, 1).text = nama_bendahara
+    ttd_table.cell(1, 0).paragraphs[0].add_run().add_picture("signatures/ttd_kades.png", width=Inches(1.0))
+    ttd_table.cell(1, 1).paragraphs[0].add_run().add_picture("signatures/ttd_ketua.png", width=Inches(1.0))
+    ttd_table.cell(2, 1).paragraphs[0].add_run("Bendahara")
+    ttd_table.cell(3, 1).paragraphs[0].add_run().add_picture("signatures/ttd_bendahara.png", width=Inches(1.0))
 
-    # TTD BPD di bawah
-    doc.add_paragraph("\nMengesahkan,\nKetua BPD\n\n" + nama_ketua_bpd)
+    # TTD Ketua BPD
+    doc.add_paragraph("\nMengesahkan,\nKetua BPD")
+    doc.add_picture("signatures/ttd_bpd.png", width=Inches(1.0))
+    doc.add_paragraph(nama_ketua_bpd)
 
-    # Simpan file
+    # Tambahkan QR Code di akhir
+    doc.add_paragraph("\n\n")
+    doc.add_picture(qr_path, width=Inches(1.2))
+
+    # Simpan dokumen
     output_path = os.path.join(os.path.dirname(__file__), "SPJ_Kegiatan.docx")
     doc.save(output_path)
+
+    # Bersihkan QR sementara
+    if os.path.exists(qr_path):
+        os.remove(qr_path)
+
     return output_path
