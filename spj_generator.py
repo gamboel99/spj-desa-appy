@@ -1,6 +1,7 @@
 import os
 from docx import Document
 from docx.shared import Pt, Inches
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime
 
@@ -9,12 +10,12 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df, bukti_upl
 
     doc = Document()
 
-    # Tambahkan logo jika ada
+    # Logo (jika ada)
     logo_path = os.path.join(os.path.dirname(__file__), "logo_desa.png")
     if os.path.exists(logo_path):
         doc.add_picture(logo_path, width=Inches(1.2))
 
-    # KOP
+    # Kop Surat
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run("PEMERINTAH DESA KELING\n").bold = True
@@ -24,12 +25,12 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df, bukti_upl
 
     doc.add_paragraph(f"\nNomor: {kode_register}/{tgl.month:02d}/{tgl.year}\n", style="Normal")
 
-    # Judul
+    # Judul SPJ
     judul = doc.add_paragraph("SURAT PERTANGGUNGJAWABAN KEGIATAN")
     judul.alignment = WD_ALIGN_PARAGRAPH.CENTER
     judul.runs[0].bold = True
 
-    # Info kegiatan
+    # Informasi kegiatan
     doc.add_paragraph(f"\nNama Kegiatan        : {nama_kegiatan}")
     doc.add_paragraph(f"Tanggal Pelaksanaan  : {tgl.strftime('%d-%m-%Y')}")
     doc.add_paragraph(f"Lembaga Pelaksana    : {lembaga}")
@@ -41,56 +42,73 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df, bukti_upl
 
     table = doc.add_table(rows=1, cols=6)
     table.style = "Table Grid"
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = "No"
-    hdr_cells[1].text = "Uraian"
-    hdr_cells[2].text = "Volume"
-    hdr_cells[3].text = "Satuan"
-    hdr_cells[4].text = "Harga Satuan"
-    hdr_cells[5].text = "Realisasi"
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    hdr = table.rows[0].cells
+    hdr[0].text = "No"
+    hdr[1].text = "Uraian"
+    hdr[2].text = "Volume"
+    hdr[3].text = "Satuan"
+    hdr[4].text = "Harga Satuan"
+    hdr[5].text = "Realisasi"
 
     total_anggaran = 0
     total_realisasi = 0
 
-    for idx, row in rab_df.iterrows():
+    for i, row in rab_df.iterrows():
         try:
-            vol = float(row["Volume"])
+            volume = float(row["Volume"])
             harga = float(row["Harga Satuan"])
-            real = float(row["Realisasi"])
+            realisasi = float(row["Realisasi"])
         except:
-            vol = harga = real = 0
+            volume = harga = realisasi = 0
 
-        jumlah = vol * harga
+        jumlah = volume * harga
         total_anggaran += jumlah
-        total_realisasi += real
+        total_realisasi += realisasi
 
-        row_cells = table.add_row().cells
-        row_cells[0].text = str(idx + 1)
-        row_cells[1].text = str(row["Uraian"])
-        row_cells[2].text = str(row["Volume"])
-        row_cells[3].text = str(row["Satuan"])
-        row_cells[4].text = f"Rp {harga:,.0f}"
-        row_cells[5].text = f"Rp {real:,.0f}"
+        r = table.add_row().cells
+        r[0].text = str(i + 1)
+        r[1].text = str(row["Uraian"])
+        r[2].text = str(row["Volume"])
+        r[3].text = str(row["Satuan"])
+        r[4].text = f"Rp {harga:,.0f}"
+        r[5].text = f"Rp {realisasi:,.0f}"
 
-    # Total
     doc.add_paragraph(f"\nTotal Anggaran : Rp {total_anggaran:,.0f}")
     doc.add_paragraph(f"Total Realisasi: Rp {total_realisasi:,.0f}")
     doc.add_paragraph(f"Selisih        : Rp {total_anggaran - total_realisasi:,.0f}")
 
-    # Penutup & TTD
-    doc.add_paragraph(f"\nDesa Keling, {tgl.strftime('%d-%m-%Y')}")
-    table_ttd = doc.add_table(rows=4, cols=2)
-    table_ttd.style = 'Table Grid'
-    table_ttd.cell(0, 0).text = "Mengetahui:\nKepala Desa"
-    table_ttd.cell(0, 1).text = f"Lembaga Pelaksana\nKetua {lembaga}"
-    table_ttd.cell(1, 0).text = nama_kades
-    table_ttd.cell(1, 1).text = nama_ketua_lembaga
-    table_ttd.cell(2, 1).text = "Bendahara"
-    table_ttd.cell(3, 1).text = nama_bendahara
+    # Paragraf TTD Atas
+    doc.add_paragraph(f"\nDesa Keling, {tgl.strftime('%d-%m-%Y')}\n")
 
-    doc.add_paragraph("\nMengesahkan,\nKetua BPD\n" + nama_ketua_bpd)
+    # Tanda tangan rapi tanpa border menggunakan table invisible
+    ttd_table = doc.add_table(rows=4, cols=2)
+    ttd_table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-    # Simpan dokumen
+    # Hapus border tabel
+    tbl = ttd_table._tbl
+    for row in tbl.xpath(".//w:tr"):
+        for cell in row.xpath(".//w:tc"):
+            tcPr = cell.find(".//w:tcPr", namespaces=cell.nsmap)
+            if tcPr is None:
+                tcPr = cell.makeelement("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tcPr")
+                cell.insert(0, tcPr)
+            tcBorders = cell.makeelement("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tcBorders")
+            tcPr.append(tcBorders)
+
+    ttd_table.cell(0, 0).text = "Mengetahui:\nKepala Desa"
+    ttd_table.cell(0, 1).text = f"Lembaga Pelaksana\nKetua {lembaga}"
+    ttd_table.cell(1, 0).text = nama_kades
+    ttd_table.cell(1, 1).text = nama_ketua_lembaga
+    ttd_table.cell(2, 0).text = ""
+    ttd_table.cell(2, 1).text = "Bendahara"
+    ttd_table.cell(3, 0).text = ""
+    ttd_table.cell(3, 1).text = nama_bendahara
+
+    # TTD BPD di bawah
+    doc.add_paragraph("\nMengesahkan,\nKetua BPD\n\n" + nama_ketua_bpd)
+
+    # Simpan file
     output_path = os.path.join(os.path.dirname(__file__), "SPJ_Kegiatan.docx")
     doc.save(output_path)
     return output_path
