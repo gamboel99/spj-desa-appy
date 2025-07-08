@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-from utils.spj_generator import buat_spj
+from spj_generator import buat_spj
 
 st.set_page_config(page_title="SPJ Desa", layout="wide")
 st.title("📄 Sistem Penerbitan Surat Pertanggungjawaban (SPJ) Desa")
