@@ -11,6 +11,11 @@ from datetime import datetime
 def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload):
     doc = Document()
 
+    # Tambahkan logo desa jika tersedia
+    logo_path = os.path.join(os.path.dirname(__file__), "logo_desa.png")
+    if os.path.exists(logo_path):
+        doc.add_picture(logo_path, width=Inches(1.0))
+
     # KOP DESA
     header = doc.add_paragraph()
     header.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -20,6 +25,12 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_da
     header.add_run("KECAMATAN KEPUNG, KABUPATEN KEDIRI\n").bold = True
     header.add_run("Alamat: Jl. Raya Keling, Bukaan, Keling, Kediri, Jawa Timur 64293\n").italic = True
     doc.add_paragraph("_______________________________________________________________")
+
+    # NOMOR REGISTER SURAT
+    nomor = f"Nomor: 470/SPJ-DESA/{tgl.month:02d}/{tgl.year}"
+    nomor_paragraf = doc.add_paragraph(nomor)
+    nomor_paragraf.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    nomor_paragraf.runs[0].bold = True
 
     # JUDUL
     judul = doc.add_paragraph("SURAT PERTANGGUNGJAWABAN KEGIATAN")
