@@ -7,14 +7,25 @@ from docx.oxml.ns import qn
 from datetime import datetime
 import qrcode
 
+def generate_register_code():
+    now = datetime.now()
+    tanggal = now.strftime("%Y-%m-%d")
+    jam = now.strftime("%H%M%S")
+    return f"{tanggal}-{jam}"
+
 def remove_table_borders(table):
     tbl = table._element
-    tblPr = tbl.get_or_add_tblPr()
+    tblPr = tbl.find(qn('w:tblPr'))
+    if tblPr is None:
+        tblPr = OxmlElement('w:tblPr')
+        tbl.insert(0, tblPr)
+
     tblBorders = OxmlElement('w:tblBorders')
     for border in ("top", "left", "bottom", "right", "insideH", "insideV"):
         b = OxmlElement(f"w:{border}")
         b.set(qn("w:val"), "nil")
         tblBorders.append(b)
+
     tblPr.append(tblBorders)
 
 def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df,
@@ -23,14 +34,11 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df,
 
     doc = Document()
 
-    # KOP DESA
     doc.add_paragraph("PEMERINTAH DESA KELING", style='Heading 1').alignment = 1
     doc.add_paragraph("KECAMATAN KEPUNG, KABUPATEN KEDIRI", style='Heading 2').alignment = 1
     doc.add_paragraph("Jl. Raya Keling, Bukaan, Keling, Kediri, Jawa Timur 64293", style='Normal').alignment = 1
     doc.add_paragraph("______________________________________________________________")
-
     doc.add_paragraph(f"\nNomor: {kode_register}/{tgl.month:02d}/{tgl.year}")
-
     doc.add_paragraph("\nSURAT PERTANGGUNGJAWABAN KEGIATAN", style='Title').alignment = 1
 
     doc.add_paragraph(f"\nNama Kegiatan        : {nama_kegiatan}")
@@ -39,15 +47,11 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df,
     doc.add_paragraph(f"Lokasi               : {lokasi}")
     doc.add_paragraph(f"Sumber Dana          : {sumber_dana}\n")
 
-    # Tabel RAB dan Realisasi
     doc.add_paragraph("Tabel RAB dan Realisasi:")
     table = doc.add_table(rows=1, cols=9)
     table.style = "Table Grid"
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    headers = [
-        "No", "Uraian", "Volume", "Satuan", "Harga Satuan",
-        "Realisasi", "Pajak (%)", "Diskon (Rp)", "Realisasi Bersih"
-    ]
+    headers = ["No", "Uraian", "Volume", "Satuan", "Harga Satuan", "Realisasi", "Pajak (%)", "Diskon (Rp)", "Realisasi Bersih"]
     for i, h in enumerate(headers):
         table.cell(0, i).text = h
 
@@ -82,12 +86,11 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df,
         for j, val in enumerate(data):
             row_cells[j].text = val
 
-    doc.add_paragraph(f"\nTotal Anggaran       : Rp {total_anggaran:,.0f}")
+    doc.add_paragraph(f"\nTotal Anggaran        : Rp {total_anggaran:,.0f}")
     doc.add_paragraph(f"Total Realisasi Bersih: Rp {total_realisasi_bersih:,.0f}")
-    doc.add_paragraph(f"Selisih              : Rp {total_anggaran - total_realisasi_bersih:,.0f}")
-    doc.add_paragraph("\n")
+    doc.add_paragraph(f"Selisih               : Rp {total_anggaran - total_realisasi_bersih:,.0f}\n")
 
-    # Tanda tangan pakai tabel transparan
+    # Tanda tangan
     ttd_table = doc.add_table(rows=3, cols=2)
     remove_table_borders(ttd_table)
     ttd_table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -99,12 +102,11 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, sumber_dana, rab_df,
 
     doc.add_paragraph("\n")
 
-    # QR Code Legalitas
+    # QR Code
     qr_data = f"Dokumen SPJ {kode_register} - Desa Keling"
     qr = qrcode.make(qr_data)
     qr_path = "qr_temp.png"
     qr.save(qr_path)
-
     doc.add_picture(qr_path, width=Inches(1.2))
     os.remove(qr_path)
 
