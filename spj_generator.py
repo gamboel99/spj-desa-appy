@@ -1,22 +1,18 @@
-import streamlit as st
-from datetime import date
-from spj_generator import buat_spj
+import os
+import pkgutil
+from docx import Document
+import io
 
-st.set_page_config(page_title="SPJ Desa", layout="wide")
-st.title("📄 Sistem Penerbitan Surat Pertanggungjawaban (SPJ) Desa")
+def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload):
+    template_bytes = pkgutil.get_data(__name__, "templates/template_spj (valid).docx")
+    
+    if not template_bytes:
+        raise FileNotFoundError("template_spj (valid).docx tidak ditemukan")
 
-with st.form("form_kegiatan"):
-    st.subheader("📌 Data Kegiatan")
-    lembaga = st.selectbox("Lembaga Pelaksana", ["TPK", "PPKAD", "PPS", "Karang Taruna", "LPMD"])
-    nama_kegiatan = st.text_input("Nama Kegiatan")
-    tgl_pelaksanaan = st.date_input("Tanggal Pelaksanaan", date.today())
-    lokasi = st.text_input("Lokasi")
-    anggaran = st.number_input("Anggaran (Rp)", min_value=0)
-    realisasi = st.number_input("Realisasi (Rp)", min_value=0)
-    sumber_dana = st.selectbox("Sumber Dana", ["DD", "ADD", "BKK", "Swadaya", "Lainnya"])
-    bukti_upload = st.file_uploader("Upload Bukti Transaksi (PDF/JPG)", accept_multiple_files=True)
-
-    submit = st.form_submit_button("✅ Buat Surat Pertanggungjawaban")
+    doc = Document(io.BytesIO(template_bytes))
+    out_path = os.path.join(os.path.dirname(__file__), "SPJ_Kegiatan.docx")
+    doc.save(out_path)
+    return out_path
 
 if submit:
     with st.spinner("📄 Membuat dokumen SPJ..."):
