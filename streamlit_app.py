@@ -6,7 +6,9 @@ from spj_generator import buat_spj
 st.set_page_config(page_title="Sistem SPJ Desa Keling", layout="wide")
 st.title("📝 Sistem SPJ Desa Keling, Kec. Kepung")
 
+st.markdown("---")
 st.subheader("📌 Data Kegiatan")
+
 with st.form("form_kegiatan"):
     lembaga = st.selectbox("Lembaga Pelaksana", ["TPK", "PPKAD", "PPS", "Karang Taruna", "LPMD"])
     nama_kegiatan = st.text_input("Nama Kegiatan")
@@ -22,11 +24,10 @@ with st.form("form_kegiatan"):
         "Satuan": [""],
         "Harga Satuan": [0],
         "Realisasi": [0],
-        "Potongan Pajak": [0],
-        "Diskon/Bunga": [0],
+        "Pajak (%)": [10],
+        "Diskon (Rp)": [0],
     }), num_rows="dynamic", use_container_width=True)
 
-    # Pejabat Penandatangan
     st.markdown("### 🖋️ Data Penandatangan")
     nama_kades = st.text_input("Nama Kepala Desa", "Sutrisno, S.E.")
     nama_ketua_bpd = st.text_input("Nama Ketua BPD", "Misdi")
@@ -51,10 +52,11 @@ if submit:
         except Exception as e:
             st.error(f"❌ Terjadi kesalahan: {e}")
 
+# Footer
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; font-size: 13px; color: gray;'>"
-    "Developed by <strong>CV. Mitra Utama Consultindo</strong>"
+    "Developed by <strong>CV. Mitra Utama Consultindo (MUC)</strong>"
     "</div>",
     unsafe_allow_html=True
 )
