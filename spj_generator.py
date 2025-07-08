@@ -1,8 +1,11 @@
 from docx import Document
 from docx2pdf import convert
+import os
+from docx import Document
 
-def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, uploads):
-    doc = Document("templates/template_spj.docx")
+def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload):
+    template_path = os.path.join(os.path.dirname(__file__), "templates", "template_spj.docx")
+    doc = Document(template_path)
 
     for p in doc.paragraphs:
         if "<<LEMBAGA>>" in p.text:
