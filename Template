@@ -1,1 +1,1 @@
-
+doc = Document("templates/template_spj.docx")
