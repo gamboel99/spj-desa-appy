@@ -4,11 +4,22 @@ from docx import Document
 import io
 
 def replace_placeholder(doc, placeholder, value):
+    # Ganti di paragraf biasa
     for para in doc.paragraphs:
         if placeholder in para.text:
             for run in para.runs:
                 if placeholder in run.text:
                     run.text = run.text.replace(placeholder, value)
+
+    # Ganti juga di dalam tabel
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if placeholder in cell.text:
+                    for para in cell.paragraphs:
+                        for run in para.runs:
+                            if placeholder in run.text:
+                                run.text = run.text.replace(placeholder, value)
 
 def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_dana, bukti_upload):
     template_bytes = pkgutil.get_data(__name__, "templates/template_spj.docx")
