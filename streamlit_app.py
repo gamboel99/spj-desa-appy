@@ -1,15 +1,9 @@
 import streamlit as st
-import os
 from datetime import date
 from spj_generator import buat_spj
 
 st.set_page_config(page_title="SPJ Desa", layout="wide")
 st.title("📄 Sistem Penerbitan Surat Pertanggungjawaban (SPJ) Desa")
-
-# Validasi keberadaan template
-template_path = os.path.join(os.path.dirname(__file__), "templates", "template_spj.docx")
-if not os.path.exists(template_path):
-    st.error(f"❌ File template tidak ditemukan: {template_path}")
 
 with st.form("form_kegiatan"):
     st.subheader("📌 Data Kegiatan")
@@ -17,10 +11,11 @@ with st.form("form_kegiatan"):
     nama_kegiatan = st.text_input("Nama Kegiatan")
     tgl_pelaksanaan = st.date_input("Tanggal Pelaksanaan", date.today())
     lokasi = st.text_input("Lokasi")
-    anggaran = st.number_input("Anggaran (Rp)", 0)
-    realisasi = st.number_input("Realisasi (Rp)", 0)
+    anggaran = st.number_input("Anggaran (Rp)", min_value=0)
+    realisasi = st.number_input("Realisasi (Rp)", min_value=0)
     sumber_dana = st.selectbox("Sumber Dana", ["DD", "ADD", "BKK", "Swadaya", "Lainnya"])
     bukti_upload = st.file_uploader("Upload Bukti Transaksi (PDF/JPG)", accept_multiple_files=True)
+
     submit = st.form_submit_button("✅ Buat Surat Pertanggungjawaban")
 
 if submit:
@@ -32,4 +27,4 @@ if submit:
             with open(file_path, "rb") as f:
                 st.download_button("📥 Unduh SPJ (DOCX)", data=f.read(), file_name="SPJ_Kegiatan.docx")
         except Exception as e:
-            st.error(f"Terjadi kesalahan saat membuat dokumen SPJ: {e}")
+            st.error(f"❌ Terjadi kesalahan saat membuat dokumen SPJ:\n\n{e}")
