@@ -1,3 +1,4 @@
+import pypandoc
 import os
 import pkgutil
 from docx import Document
@@ -30,6 +31,10 @@ def buat_spj(lembaga, nama_kegiatan, tgl, lokasi, anggaran, realisasi, sumber_da
     replace_placeholder(doc, "{{sumber_dana}}", sumber_dana)
 
     # Simpan hasil
-    out_path = os.path.join(os.path.dirname(__file__), "SPJ_Kegiatan.docx")
-    doc.save(out_path)
-    return out_path
+    pdf_path = doc_path.replace(".docx", ".pdf")
+    try:
+        pypandoc.convert_file(doc_path, 'pdf', outputfile=pdf_path)
+    except Exception as e:
+        raise RuntimeError(f"Gagal konversi PDF: {e}")
+
+    return pdf_path
